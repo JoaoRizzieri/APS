@@ -1,5 +1,7 @@
 package com.aps.apsarquitetura.controller;
 
+import com.aps.apsarquitetura.dto.OrdemServicoRequestDTO;
+import com.aps.apsarquitetura.dto.OrdemServicoResponseDTO;
 import com.aps.apsarquitetura.model.OrdemServicoModel;
 import com.aps.apsarquitetura.service.OrdemServicoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,8 @@ public class OrdemServicoController {
 
 
     @PostMapping
-    public ResponseEntity<OrdemServicoModel> criarOrdemServico(@RequestBody OrdemServicoModel ordem) {
-        OrdemServicoModel criada = service.criarOrdemServico(ordem);
+    public ResponseEntity<OrdemServicoResponseDTO> criarOrdemServico(@RequestBody OrdemServicoRequestDTO ordem) {
+        OrdemServicoResponseDTO criada = service.criarOrdemServico(ordem);
         return ResponseEntity.status(HttpStatus.CREATED).body(criada);
     }
 

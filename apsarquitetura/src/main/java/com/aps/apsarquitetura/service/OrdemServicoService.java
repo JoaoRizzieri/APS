@@ -1,5 +1,7 @@
 package com.aps.apsarquitetura.service;
 
+import com.aps.apsarquitetura.dto.OrdemServicoRequestDTO;
+import com.aps.apsarquitetura.dto.OrdemServicoResponseDTO;
 import com.aps.apsarquitetura.model.OrdemServicoModel;
 import com.aps.apsarquitetura.repossitory.OrdemServicoRepoitory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,27 +16,50 @@ public class OrdemServicoService {
     @Autowired
     private OrdemServicoRepoitory repository;
 
-    public OrdemServicoModel criarOrdemServico(OrdemServicoModel ordemServicoModel) {
+    public OrdemServicoResponseDTO criarOrdemServico(OrdemServicoRequestDTO dto) {
 
-        boolean jaExiste = repository.existsByNomeIgnoreCaseAndDescricaoIgnoreCaseAndClienteIgnoreCase(
-                ordemServicoModel.getNome(),
-                ordemServicoModel.getDescricao(),
-                ordemServicoModel.getCliente());
-        if (jaExiste) {
-            throw new RuntimeException("ordem ja existente");
+        // validações primeiro
+        if (dto.getDescricao() == null || dto.getDescricao().isBlank()) {
+            throw new RuntimeException("descrição não pode ser vazia");
         }
 
-        if (ordemServicoModel.getDescricao() == null) {
-            throw new RuntimeException("descricao não pode ser vazia");
-        }
-
-        if (ordemServicoModel.getCliente() == null) {
+        if (dto.getCliente() == null || dto.getCliente().isBlank()) {
             throw new RuntimeException("nome do cliente não pode ser vazio");
         }
-        ordemServicoModel.setStatus("ABERTA");
-        ordemServicoModel.setDataCriacao(LocalDate.now());
 
-        return repository.save(ordemServicoModel);
+        // verifica duplicidade
+        boolean jaExiste = repository.existsByNomeIgnoreCaseAndDescricaoIgnoreCaseAndClienteIgnoreCase(
+                dto.getNome(),
+                dto.getDescricao(),
+                dto.getCliente()
+        );
+
+        if (jaExiste) {
+            throw new RuntimeException("ordem já existente");
+        }
+
+        // 1. converte DTO → Model
+        OrdemServicoModel model = new OrdemServicoModel();
+        model.setNome(dto.getNome());
+        model.setDescricao(dto.getDescricao());
+        model.setCliente(dto.getCliente());
+
+        // sistema define esses valores, não o usuário
+        model.setStatus("ABERTA");
+        model.setDataCriacao(LocalDate.now());
+
+        // 2. salva o Model no banco
+        OrdemServicoModel salvo = repository.save(model);
+
+        // 3. converte Model → ResponseDTO
+        OrdemServicoResponseDTO response = new OrdemServicoResponseDTO();
+        response.setNome(salvo.getNome());
+        response.setDescricao(salvo.getDescricao());
+        response.setCliente(salvo.getCliente());
+        response.setStatus(salvo.getStatus());
+        response.setDataCriacao(salvo.getDataCriacao());
+
+        return response;
     }
 
     public OrdemServicoModel atualizar(Long id, OrdemServicoModel ordemServicoModel) {
